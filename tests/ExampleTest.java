@@ -35,6 +35,7 @@ class ExampleTest {
 
     /**
      * An example test, see link below for options inside a test and how to assert
+     *
      * @link http://junit.org/junit5/docs/current/user-guide/
      */
     @Test
