@@ -1,5 +1,7 @@
 public class Main {
     public static void main(String[] args) {
-        System.out.println("Main program");
+        // Setup a server which will listen for incoming XML messages from different stations
+        Server c = new Server();
+        c.run();
     }
 }

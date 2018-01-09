@@ -3,37 +3,25 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import java.io.File;
 import java.io.IOException;
+import java.io.StringReader;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 class Parser {
 
-    private String filename;
-
-    Parser(String filename) {
-        this.filename = filename;
-
-        DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
-        DocumentBuilder docBuilder;
-
+    Parser(File file) {
         try {
-            docBuilder = docFactory.newDocumentBuilder();
-            Document doc = docBuilder.parse(this.filename);
-            doc.getDocumentElement().normalize();
-            System.out.println("Root element :" + doc.getDocumentElement().getNodeName());
-            NodeList nodeList = doc.getElementsByTagName("MEASUREMENT");
-            //now XML is loaded as Document in memory, lets convert it to Object List
-            List<Measurement> measurementsList = new ArrayList<>();
-            for (int i = 0; i < nodeList.getLength(); i++) {
-                measurementsList.add(parseMeasurement(nodeList.item(i)));
-            }
+            DocumentBuilder docBuilder = getDocBuilder();
+            Document doc = docBuilder.parse(file);
+            List<Measurement> measurementsList = this.getMeasurementsFromXML(doc);
             //lets print Employee list information
             for (Measurement m : measurementsList) {
                 System.out.println(m);
@@ -43,23 +31,37 @@ class Parser {
         }
     }
 
-    private Measurement parseMeasurement(Node node) {
-        Measurement m = new Measurement();
-        if (node.getNodeType() == Node.ELEMENT_NODE) {
-            Element element = (Element) node;
-            m.station = getTagValue("STN", element);
-            // TODO: make a datetime of this field
-            m.date = getTagValue("DATE", element);
-            m.time = getTagValue("TIME", element);
+    Parser(String xml) {
+        try {
+            DocumentBuilder docBuilder = getDocBuilder();
+            InputSource is = new InputSource(new StringReader(xml));
+            Document doc = docBuilder.parse(is);
+            List<Measurement> measurements = getMeasurementsFromXML(doc);
+            System.out.println(String.format("Total measurements (%s):", measurements.size()));
+            for (Measurement measurement : measurements) {
+                System.out.println("\t"+measurement);
+            }
+            System.out.println();
+        } catch (ParserConfigurationException | SAXException | IOException e) {
+            e.printStackTrace();
         }
-
-        return m;
     }
 
-    private static String getTagValue(String tag, Element element) {
-        NodeList nodeList = element.getElementsByTagName(tag).item(0).getChildNodes();
-        Node node = nodeList.item(0);
-        return node.getNodeValue();
+    private DocumentBuilder getDocBuilder() throws ParserConfigurationException {
+        DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
+        return docFactory.newDocumentBuilder();
+    }
+
+    private List<Measurement> getMeasurementsFromXML(Document doc) {
+        doc.getDocumentElement().normalize();
+        // retrieve all measurements nodes
+        NodeList nodeList = doc.getElementsByTagName("MEASUREMENT");
+        List<Measurement> measurementsList = new ArrayList<>();
+        for (int i = 0; i < nodeList.getLength(); i++) {
+            // go through each node and pass it to a new Measurement which will hydrate himself
+            measurementsList.add(new Measurement(nodeList.item(i)));
+        }
+        return measurementsList;
     }
 
 }
