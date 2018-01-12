@@ -17,6 +17,8 @@ import java.util.List;
 
 class Parser {
 
+    private List<Measurement> measurements;
+
     Parser(File file) {
         try {
             DocumentBuilder docBuilder = getDocBuilder();
@@ -36,12 +38,7 @@ class Parser {
             DocumentBuilder docBuilder = getDocBuilder();
             InputSource is = new InputSource(new StringReader(xml));
             Document doc = docBuilder.parse(is);
-            List<Measurement> measurements = getMeasurementsFromXML(doc);
-            System.out.println(String.format("Total measurements (%s):", measurements.size()));
-            for (Measurement measurement : measurements) {
-                System.out.println("\t"+measurement);
-            }
-            System.out.println();
+            measurements = getMeasurementsFromXML(doc);
         } catch (ParserConfigurationException | SAXException | IOException e) {
             e.printStackTrace();
         }
@@ -64,4 +61,15 @@ class Parser {
         return measurementsList;
     }
 
+    public List<Measurement> parse(String xml) {
+        try {
+            DocumentBuilder docBuilder = getDocBuilder();
+            InputSource is = new InputSource(new StringReader(xml));
+            Document doc = docBuilder.parse(is);
+            measurements = getMeasurementsFromXML(doc);
+        } catch (ParserConfigurationException | SAXException | IOException e) {
+            e.printStackTrace();
+        }
+        return measurements;
+    }
 }

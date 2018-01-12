@@ -44,7 +44,7 @@ class SocketThread extends Thread {
                     xml.append(line);
                     if (xml.toString().endsWith("</WEATHERDATA>")) {
                         // processing of message is done in same thread, reading will have to wait
-                        processMessage(xml.toString());
+                        return xml.toString();
                         xml.setLength(0);
                     }
                 } else {
@@ -58,7 +58,4 @@ class SocketThread extends Thread {
         }
     }
 
-    private void processMessage(String xml) {
-        Parser parser = new Parser(xml);
-    }
 }
