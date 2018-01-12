@@ -7,8 +7,15 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.Queue;
 
 public class Server {
+
+    private Queue<String> queue;
+
+    Server(Queue<String> queue) {
+        this.queue = queue;
+    }
 
     public void run() {
         try {
@@ -17,7 +24,7 @@ public class Server {
 
             while (true) {
                 Socket s = server.accept();
-                new SocketThread(s).start();
+                new SocketThread(s, queue).start();
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -28,8 +35,10 @@ public class Server {
 class SocketThread extends Thread {
 
     private Socket s;
+    private Queue<String> queue;
 
-    SocketThread(Socket s) {
+    SocketThread(Socket s, Queue<String> queue ) {
+        this.queue = queue;
         this.s = s;
     }
 
@@ -44,7 +53,7 @@ class SocketThread extends Thread {
                     xml.append(line);
                     if (xml.toString().endsWith("</WEATHERDATA>")) {
                         // processing of message is done in same thread, reading will have to wait
-                        return xml.toString();
+                        queue.offer(xml.toString());
                         xml.setLength(0);
                     }
                 } else {
