@@ -7,17 +7,35 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.Queue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
 
-public class Server {
+public class Server extends Thread {
+
+
+    private Queue<String> queue;
+
+    Server(Queue<String> queue) {
+        this.queue = queue;
+    }
 
     public void run() {
         try {
+            System.out.println("Starting Cached Thread Pool");
+            // Make a Cached Thread Pool
+            ExecutorService executor = Executors.newCachedThreadPool();
+            // ExecutorService doesn't have a method to retrieve the number of threads in the Thread Pool
+            // That is why we cast the ExecutorService to a ThreadPoolExecutor so we can execute the method getPoolSize()
+            ThreadPoolExecutor pool = (ThreadPoolExecutor) executor;
             ServerSocket server = new ServerSocket(3301);
             System.out.print("Server started...");
 
             while (true) {
                 Socket s = server.accept();
-                new SocketThread(s).start();
+                executor.execute(new SocketThread(s, queue, pool));
+                System.out.println("Number of threads in pool: " + pool.getPoolSize());
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -27,15 +45,23 @@ public class Server {
 
 class SocketThread extends Thread {
 
+    private final ThreadPoolExecutor pool;
     private Socket s;
+    private Queue<String> queue;
+    private static int nth = 0;
+    // Increase the id with 1 when new Thread is created
+    private final int id = ++nth;
 
-    SocketThread(Socket s) {
+    SocketThread(Socket s, Queue<String> queue, ThreadPoolExecutor pool) {
+        this.queue = queue;
         this.s = s;
+        this.pool = pool;
     }
 
     @Override
     public void run() {
         try {
+            System.out.println("Starting thread: " + id);
             BufferedReader in = new BufferedReader(new InputStreamReader(s.getInputStream()));
             StringBuilder xml = new StringBuilder();
             while (s.isConnected() && !isInterrupted()) {
@@ -44,8 +70,11 @@ class SocketThread extends Thread {
                     xml.append(line);
                     if (xml.toString().endsWith("</WEATHERDATA>")) {
                         // processing of message is done in same thread, reading will have to wait
-                        processMessage(xml.toString());
+                        queue.offer(xml.toString());
                         xml.setLength(0);
+                        System.out.println("Number of items in queue: " + queue.size());
+                        System.out.println("Finished by thread: " + id);
+                        System.out.println("Number of threads in pool: " + pool.getPoolSize());
                     }
                 } else {
                     in.close();
@@ -58,7 +87,4 @@ class SocketThread extends Thread {
         }
     }
 
-    private void processMessage(String xml) {
-        Parser parser = new Parser(xml);
-    }
 }
