@@ -1,4 +1,5 @@
 import models.Measurement;
+import org.jetbrains.annotations.Nullable;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -17,39 +18,42 @@ import java.util.List;
 
 class Parser {
 
-    private List<Measurement> measurements;
+    private static DocumentBuilder docBuilder;
 
-    Parser(File file) {
+    @Nullable
+    public static List<Measurement> parseFromFile(File file) {
         try {
             DocumentBuilder docBuilder = getDocBuilder();
             Document doc = docBuilder.parse(file);
-            List<Measurement> measurementsList = this.getMeasurementsFromXML(doc);
-            //lets print Employee list information
-            for (Measurement m : measurementsList) {
-                System.out.println(m);
-            }
+            return getMeasurementsFromXML(doc);
         } catch (ParserConfigurationException | SAXException | IOException e) {
             e.printStackTrace();
         }
+        return null;
     }
 
-    Parser(String xml) {
+    @Nullable
+    public static List<Measurement> parseFromXML(String xml) {
         try {
             DocumentBuilder docBuilder = getDocBuilder();
             InputSource is = new InputSource(new StringReader(xml));
             Document doc = docBuilder.parse(is);
-            measurements = getMeasurementsFromXML(doc);
+            return getMeasurementsFromXML(doc);
         } catch (ParserConfigurationException | SAXException | IOException e) {
             e.printStackTrace();
         }
+        return null;
     }
 
-    private DocumentBuilder getDocBuilder() throws ParserConfigurationException {
-        DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
-        return docFactory.newDocumentBuilder();
+    private static DocumentBuilder getDocBuilder() throws ParserConfigurationException {
+        if(docBuilder == null) {
+            DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
+            docBuilder = docFactory.newDocumentBuilder();
+        }
+        return docBuilder;
     }
 
-    private List<Measurement> getMeasurementsFromXML(Document doc) {
+    private static List<Measurement> getMeasurementsFromXML(Document doc) {
         doc.getDocumentElement().normalize();
         // retrieve all measurements nodes
         NodeList nodeList = doc.getElementsByTagName("MEASUREMENT");
@@ -59,17 +63,5 @@ class Parser {
             measurementsList.add(new Measurement(nodeList.item(i)));
         }
         return measurementsList;
-    }
-
-    public List<Measurement> parse(String xml) {
-        try {
-            DocumentBuilder docBuilder = getDocBuilder();
-            InputSource is = new InputSource(new StringReader(xml));
-            Document doc = docBuilder.parse(is);
-            measurements = getMeasurementsFromXML(doc);
-        } catch (ParserConfigurationException | SAXException | IOException e) {
-            e.printStackTrace();
-        }
-        return measurements;
     }
 }

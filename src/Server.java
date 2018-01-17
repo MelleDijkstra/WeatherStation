@@ -8,19 +8,20 @@ import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 
 public class Server extends Thread {
 
+    private ConcurrentLinkedQueue<String> queue;
 
-    private Queue<String> queue;
-
-    Server(Queue<String> queue) {
+    Server(ConcurrentLinkedQueue<String> queue) {
         this.queue = queue;
     }
 
+    @Override
     public void run() {
         try {
             System.out.println("Starting Cached Thread Pool");
@@ -34,7 +35,7 @@ public class Server extends Thread {
 
             while (true) {
                 Socket s = server.accept();
-                executor.execute(new SocketThread(s, queue, pool));
+                executor.execute(new SocketThread(s, queue));
                 System.out.println("Number of threads in pool: " + pool.getPoolSize());
             }
         } catch (IOException e) {
@@ -45,17 +46,15 @@ public class Server extends Thread {
 
 class SocketThread extends Thread {
 
-    private final ThreadPoolExecutor pool;
     private Socket s;
-    private Queue<String> queue;
+    private ConcurrentLinkedQueue<String> queue;
     private static int nth = 0;
     // Increase the id with 1 when new Thread is created
     private final int id = ++nth;
 
-    SocketThread(Socket s, Queue<String> queue, ThreadPoolExecutor pool) {
+    SocketThread(Socket s, ConcurrentLinkedQueue<String> queue) {
         this.queue = queue;
         this.s = s;
-        this.pool = pool;
     }
 
     @Override
@@ -74,7 +73,6 @@ class SocketThread extends Thread {
                         xml.setLength(0);
                         System.out.println("Number of items in queue: " + queue.size());
                         System.out.println("Finished by thread: " + id);
-                        System.out.println("Number of threads in pool: " + pool.getPoolSize());
                     }
                 } else {
                     in.close();

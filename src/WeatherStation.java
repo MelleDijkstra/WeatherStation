@@ -6,13 +6,10 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class WeatherStation {
 
-    Server s;
-    Parser p;
+    private Server s;
     //VMConnection vmc;
     //CorrectionModel cm;
-    private Queue<String> queue;
-
-
+    private ConcurrentLinkedQueue<String> queue;
 
     WeatherStation() {
         // TODO: setup server and autodiscovery
@@ -22,11 +19,20 @@ public class WeatherStation {
     }
 
     public void run() {
+        // Start the server
         s.start();
         while(true) {
+            // Constantly check if new XML messages are coming in
             String xml = queue.poll();
             if(xml != null) {
-                List<Measurement> measurementList = p.parse(xml);
+                // If there is an XML message, parse it. Parser returns Measurement objects from the XML
+                List<Measurement> measurementList = Parser.parseFromXML(xml);
+                if(measurementList != null) {
+                    System.out.println("\nTotal: "+measurementList.size()+"\n");
+                    for (Measurement measurement : measurementList) {
+                        System.out.println(measurement);
+                    }
+                }
                 //List<Measurement> correctedMeasurements = cm.runCorrections(measurementList);
             }
         }
