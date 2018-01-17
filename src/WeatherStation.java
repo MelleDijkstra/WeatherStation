@@ -20,7 +20,8 @@ public class WeatherStation {
 
     public void run() {
         // Start the server
-        s.start();
+        s.startDiscovery();
+        //s.start();
         while(true) {
             // Constantly check if new XML messages are coming in
             String xml = queue.poll();
