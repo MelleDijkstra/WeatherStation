@@ -20,7 +20,7 @@ def start_auto_discovery(port=8888, addr='255.255.255.255'):
     while current_request <= MAX_REQUEST:
         # send request
         s.sendto(data, (addr, port))
-        print("Request packet (" + str(current_request) + ") sent to: \033[94m" + addr + ":" + str(port)+"\033[0m")
+        print("Request packet (" + str(current_request) + ") sent to: \033[94m" + addr + ":" + str(port) + "\033[0m")
 
         # wait for response
         try:
@@ -37,8 +37,8 @@ def start_auto_discovery(port=8888, addr='255.255.255.255'):
         except socket.timeout as e:
             print("broadcast timeout for request (" + str(current_request) + ")")
             current_request += 1
-    print("\033[93mNo response after " + str(MAX_REQUEST) + " broadcasts, check firewall or if the weatherstation is actually "
-                                                    "on!\033[0m")
+    print("\033[93mNo response after " + str(MAX_REQUEST) + " broadcasts, check firewall or if the weatherstation is "
+                                                            "actually on!\033[0m")
     return None
 
 
