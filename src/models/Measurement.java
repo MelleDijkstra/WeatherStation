@@ -3,6 +3,9 @@ package models;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+
 /**
  * Class Measurement
  */
@@ -16,7 +19,7 @@ public class Measurement extends BaseModel implements Hydrate {
      * }
      * </p>
      */
-    public String station;
+    public int station;
 
     /**
      * Datum van versturen van deze gegevens, formaat: yyyy-mm-dd
@@ -26,17 +29,7 @@ public class Measurement extends BaseModel implements Hydrate {
      * }
      * </p>
      */
-    public String date;
-
-    /**
-     * Tijd van versturen van deze gegevens, formaat: hh:mm:ss
-     * <p>Example:
-     * {@code
-     * <TIME>15:59:46</TIME>
-     * }
-     * </p>
-     */
-    public String time;
+    public LocalDateTime dateTime;
 
     /**
      * Temperatuur in graden Celsius, geldige waardes van -9999.9 t/m 9999.9 met 1 decimaal
@@ -46,7 +39,7 @@ public class Measurement extends BaseModel implements Hydrate {
      * }
      * </p>
      */
-    public String temp;
+    public float temp;
 
     /**
      * Dauwpunt in graden Celsius, geldige waardes van -9999.9 t/m 9999.9 met 1 decimaal
@@ -56,7 +49,7 @@ public class Measurement extends BaseModel implements Hydrate {
      * }
      * </p>
      */
-    public String dewPoint;
+    public Float dewPoint;
 
     /**
      * Luchtdruk op stationsniveau in millibar, geldige waardes van 0.0 t/m 9999.9 met 1 decimaal
@@ -66,7 +59,7 @@ public class Measurement extends BaseModel implements Hydrate {
      * }
      * </p>
      */
-    public String stationAirPressure;
+    public Float stationAirPressure;
 
     /**
      * Luchtdruk op zeeniveau in millibar, geldige waardes van 0.0 t/m 9999.9 met 1 decimaal
@@ -76,7 +69,7 @@ public class Measurement extends BaseModel implements Hydrate {
      * }
      * </p>
      */
-    public String seaAirPressure;
+    public Float seaAirPressure;
 
     /**
      * Zichtbaarheid in kilometers, geldige waardes van 0.0 t/m 999.9 met 1 decimaal
@@ -86,7 +79,7 @@ public class Measurement extends BaseModel implements Hydrate {
      * }
      * </p>
      */
-    public String visibilityRange;
+    public Float visibilityRange;
 
     /**
      * Windsnelheid in kilometers per uur, geldige waardes van 0.0 t/m 999.9 met 1 decimaal
@@ -96,7 +89,7 @@ public class Measurement extends BaseModel implements Hydrate {
      * }
      * </p>
      */
-    public String windSpeed;
+    public Float windSpeed;
 
     /**
      * Neerslag in centimeters, geldige waardes van 0.00 t/m 999.99 met 2 decimalen
@@ -106,7 +99,7 @@ public class Measurement extends BaseModel implements Hydrate {
      * }
      * </p>
      */
-    public String precipitation;
+    public Float precipitation;
 
     /**
      * Gevallen sneeuw in centimeters, geldige waardes van -9999.9 t/m 9999.9 met 1 decimaal
@@ -116,7 +109,7 @@ public class Measurement extends BaseModel implements Hydrate {
      * }
      * </p>
      */
-    public String snowFall;
+    public Float snowFall;
 
     /**
      * Gebeurtenissen op deze dag, cummulatief, binair uitgedrukt.
@@ -133,7 +126,7 @@ public class Measurement extends BaseModel implements Hydrate {
      * }
      * </p>
      */
-    public String events;
+    public int events;
 
 
     /**
@@ -145,7 +138,7 @@ public class Measurement extends BaseModel implements Hydrate {
      * </p>
      */
     // TODO: rename to overcast?
-    public String cloudCoverage;
+    public Float cloudCoverage;
 
 
     /**
@@ -156,7 +149,7 @@ public class Measurement extends BaseModel implements Hydrate {
      * }
      * </p>
      */
-    public String windDirection;
+    public Float windDirection;
 
     public Measurement() {
     }
@@ -167,8 +160,8 @@ public class Measurement extends BaseModel implements Hydrate {
 
     @Override
     public String toString() {
-        return String.format("%s - %s %s - tmp: %s dwp: %s spres: %s seapres: %s vr: %s wind: %s prec: %s snow: %s evt: %s cls: %s wnddir: %s",
-                station, date, time, temp, dewPoint, stationAirPressure, seaAirPressure, visibilityRange, windSpeed,
+        return String.format("%s - %s - tmp: %s dwp: %s spres: %s seapres: %s vr: %s wind: %s prec: %s snow: %s evt: %s cls: %s wnddir: %s",
+                station, dateTime, temp, dewPoint, stationAirPressure, seaAirPressure, visibilityRange, windSpeed,
                 precipitation, snowFall, events, cloudCoverage, windDirection);
     }
 
@@ -177,22 +170,23 @@ public class Measurement extends BaseModel implements Hydrate {
         if (node.getNodeType() == Node.ELEMENT_NODE) {
             Element element = (Element) node;
             // TODO: make int of this field
-            station = getTagValue("STN", element);
+            station = Integer.parseInt(getTagValue("STN", element));
             // TODO: make a datetime of these fields
             // TODO: make all these field their according value
-            date = getTagValue("DATE", element);
-            time = getTagValue("TIME", element);
-            temp = getTagValue("TEMP", element);
-            dewPoint = getTagValue("DEWP", element);
-            stationAirPressure = getTagValue("STP", element);
-            seaAirPressure = getTagValue("SLP", element);
-            visibilityRange = getTagValue("VISIB", element);
-            windSpeed = getTagValue("WDSP", element);
-            precipitation = getTagValue("PRCP", element);
-            snowFall = getTagValue("SNDP", element);
-            events = getTagValue("FRSHTT", element);
-            cloudCoverage = getTagValue("CLDC", element);
-            windDirection = getTagValue("WNDDIR", element);
+            String datetime = getTagValue("DATE", element) + " " + getTagValue("TIME", element);
+            this.dateTime = LocalDateTime.from(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").parse(datetime));
+            temp = Float.valueOf(getTagValue("TEMP", element));
+            dewPoint = Float.valueOf(getTagValue("DEWP", element));
+            stationAirPressure = Float.valueOf(getTagValue("STP", element));
+            seaAirPressure = Float.valueOf(getTagValue("SLP", element));
+            visibilityRange = Float.valueOf(getTagValue("VISIB", element));
+            windSpeed = Float.valueOf(getTagValue("WDSP", element));
+            precipitation = Float.valueOf(getTagValue("PRCP", element));
+            snowFall = Float.valueOf(getTagValue("SNDP", element));
+            events = Integer.parseInt(getTagValue("FRSHTT", element));
+            cloudCoverage = Float.valueOf(getTagValue("CLDC", element));
+            windDirection = Float.valueOf(getTagValue("WNDDIR", element));
         }
     }
+
 }
