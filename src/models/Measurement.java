@@ -49,7 +49,7 @@ public class Measurement extends BaseModel implements Hydrate {
      * }
      * </p>
      */
-    public Float dewPoint;
+    public float dewPoint;
 
     /**
      * Luchtdruk op stationsniveau in millibar, geldige waardes van 0.0 t/m 9999.9 met 1 decimaal
@@ -59,7 +59,7 @@ public class Measurement extends BaseModel implements Hydrate {
      * }
      * </p>
      */
-    public Float stationAirPressure;
+    public float stationAirPressure;
 
     /**
      * Luchtdruk op zeeniveau in millibar, geldige waardes van 0.0 t/m 9999.9 met 1 decimaal
@@ -69,7 +69,7 @@ public class Measurement extends BaseModel implements Hydrate {
      * }
      * </p>
      */
-    public Float seaAirPressure;
+    public float seaAirPressure;
 
     /**
      * Zichtbaarheid in kilometers, geldige waardes van 0.0 t/m 999.9 met 1 decimaal
@@ -79,7 +79,7 @@ public class Measurement extends BaseModel implements Hydrate {
      * }
      * </p>
      */
-    public Float visibilityRange;
+    public float visibilityRange;
 
     /**
      * Windsnelheid in kilometers per uur, geldige waardes van 0.0 t/m 999.9 met 1 decimaal
@@ -89,7 +89,7 @@ public class Measurement extends BaseModel implements Hydrate {
      * }
      * </p>
      */
-    public Float windSpeed;
+    public float windSpeed;
 
     /**
      * Neerslag in centimeters, geldige waardes van 0.00 t/m 999.99 met 2 decimalen
@@ -99,7 +99,7 @@ public class Measurement extends BaseModel implements Hydrate {
      * }
      * </p>
      */
-    public Float precipitation;
+    public float precipitation;
 
     /**
      * Gevallen sneeuw in centimeters, geldige waardes van -9999.9 t/m 9999.9 met 1 decimaal
@@ -109,7 +109,7 @@ public class Measurement extends BaseModel implements Hydrate {
      * }
      * </p>
      */
-    public Float snowFall;
+    public float snowFall;
 
     /**
      * Gebeurtenissen op deze dag, cummulatief, binair uitgedrukt.
@@ -138,7 +138,7 @@ public class Measurement extends BaseModel implements Hydrate {
      * </p>
      */
     // TODO: rename to overcast?
-    public Float cloudCoverage;
+    public float cloudCoverage;
 
 
     /**
@@ -149,10 +149,7 @@ public class Measurement extends BaseModel implements Hydrate {
      * }
      * </p>
      */
-    public Float windDirection;
-
-    public Measurement() {
-    }
+    public float windDirection;
 
     public Measurement(Node node) {
         load(node);
