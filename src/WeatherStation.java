@@ -1,65 +1,72 @@
 import models.Measurement;
 import protobuf.WeatherstationV1;
 
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+/**
+ * The weatherstation
+ */
 public class WeatherStation {
 
+    /**
+     * Server object where clients can connect with and send measurement XML information
+     */
     private Server s;
     //VMConnection vmc;
     //CorrectionModel cm;
+
+    /**
+     * Thread safe queue shared among client threads
+     */
     private ConcurrentLinkedQueue<String> queue;
+
+    /**
+     * Running flag
+     */
+    private boolean running = true;
 
     WeatherStation() {
         // TODO: setup server and autodiscovery
         // Making a ThreadSafe Queue
         queue = new ConcurrentLinkedQueue<>();
         s = new Server(queue);
-        WeatherstationV1.Measurement m = WeatherstationV1.Measurement.newBuilder()
-                .setStation(1234567)
-                .setDatetime((int) (System.currentTimeMillis() / 1000L))
-                .build();
-        System.out.println("Protobuf works - measurement size: " + m.getSerializedSize());
-        try {
-            // write the data to file
-            Calendar c = GregorianCalendar.getInstance();
-            c.setTime(new Date());
-            System.out.println("hour: " + c.get(Calendar.HOUR_OF_DAY));
-
-            m.writeTo(new FileOutputStream(c.get(Calendar.HOUR_OF_DAY) + ".dat"));
-            // read the data from file
-            WeatherstationV1.Measurement m2 = WeatherstationV1.Measurement.parseFrom(new FileInputStream(c.get(Calendar.HOUR_OF_DAY) + ".dat"));
-            System.out.println("Measurement read from file: " + new Date((long) m2.getDatetime() * 1000));
-        } catch (IOException e) {
-            System.out.println("Could not create file!!");
-            e.printStackTrace();
-        }
     }
 
     public void run() {
         // Start the server
-        s.startDiscovery();
-        //s.start();
-        while (true) {
+        //s.startDiscovery();
+        s.start();
+        while (running) {
             // Constantly check if new XML messages are coming in
             String xml = queue.poll();
             if (xml != null) {
                 // If there is an XML message, parse it. Parser returns Measurement objects from the XML
                 List<Measurement> measurementList = Parser.parseFromXML(xml);
                 if (measurementList != null) {
-                    System.out.println("\nTotal: " + measurementList.size() + "\n");
-                    for (Measurement measurement : measurementList) {
-                        System.out.println(measurement);
+                    // Go through measurement list and check for errors
+                    // TODO: correction
+                    // Store measurement
+                    for (Measurement m : measurementList) {
+                        try {
+                            File file = new File(m.getFilename());
+                            file.getParentFile().mkdirs();
+                            m.toProtobuf().writeTo(new FileOutputStream(file));
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
                     }
                 }
-                //List<Measurement> correctedMeasurements = cm.runCorrections(measurementList);
             }
         }
+    }
+
+    /**
+     * Stop the weatherstation
+     */
+    public void stop() {
+        running = false;
     }
 }

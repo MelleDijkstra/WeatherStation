@@ -9,7 +9,8 @@ abstract class BaseModel {
 
     /**
      * Get tag value from Element
-     * @param tag The tag of the XML Element
+     *
+     * @param tag     The tag of the XML Element
      * @param element The actual element
      * @return The node value as string
      */

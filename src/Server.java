@@ -31,7 +31,7 @@ public class Server extends Thread {
             // That is why we cast the ExecutorService to a ThreadPoolExecutor so we can execute the method getPoolSize()
             ThreadPoolExecutor pool = (ThreadPoolExecutor) executor;
             ServerSocket server = new ServerSocket(3301);
-            System.out.print("Server started...");
+            System.out.println("Server started...");
 
             while (true) {
                 Socket s = server.accept();
@@ -55,7 +55,7 @@ class AutoDiscovery extends Thread {
     @Override
     public void run() {
         try {
-            //Keep a socket open to listen to all the UDP trafic that is destined for this port
+            //Keep a socket open to listen to all the UDP traffic that is destined for this port
             DatagramSocket udp = new DatagramSocket(8888, InetAddress.getByName("0.0.0.0"));
             udp.setBroadcast(true);
 

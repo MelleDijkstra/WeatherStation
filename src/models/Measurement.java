@@ -2,8 +2,11 @@ package models;
 
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
+import protobuf.WeatherstationV1;
 
+import java.io.File;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 
 /**
@@ -114,12 +117,12 @@ public class Measurement extends BaseModel implements Hydrate {
     /**
      * Gebeurtenissen op deze dag, cummulatief, binair uitgedrukt.
      * Opeenvolgend, van meest- naar minst significant:
-     * Vriezen, geeft aan of het gevroren heeft
-     * Regen, geeft aan of het geregend heeft.
-     * Sneeuw, geeft aan of het gesneeuwd heeft.
-     * Hagel, geeft aan of het gehageld heeft.
-     * Onweer, geeft aan of er onweer is geweest.
-     * Tornado/windhoos, geeft aan of er een tornado of windhoos geweest is.
+     * 0 = Vriezen, geeft aan of het gevroren heeft
+     * 1 = Regen, geeft aan of het geregend heeft.
+     * 2 = Sneeuw, geeft aan of het gesneeuwd heeft.
+     * 3 = Hagel, geeft aan of het gehageld heeft.
+     * 4 = Onweer, geeft aan of er onweer is geweest.
+     * 5 = Tornado/windhoos, geeft aan of er een tornado of windhoos geweest is.
      * <p>Example:
      * {@code
      * <FRSHTT>010101</FRSHTT>
@@ -186,4 +189,31 @@ public class Measurement extends BaseModel implements Hydrate {
         }
     }
 
+    public WeatherstationV1.Measurement toProtobuf() {
+        return WeatherstationV1.Measurement.newBuilder()
+                .setStation(station)
+                .setDatetime((int) dateTime.atZone(ZoneId.systemDefault()).toEpochSecond())
+                .setDewpoint(dewPoint)
+                .setFallenSnow(snowFall)
+                .setOvercast(cloudCoverage)
+                .setPrecipitation(precipitation)
+                .setSeaAirPressure(seaAirPressure)
+                .setStationAirPressure(stationAirPressure)
+                .setTemperature(temp)
+                .setVisibility(visibilityRange)
+                .setFreeze((events & 1) != 0) // check 0th bit
+                .setRain((events & 1 << 1) != 0) // check 1th bit
+                .setSnow((events & 1 << 2) != 0) // check 2th bit
+                .setHail((events & 1 << 3) != 0) // check 3th bit
+                .setStorm((events & 1 << 4) != 0) // check 4th bit
+                .setTornado((events & 1 << 5) != 0) // check 5th bit
+                .build();
+    }
+
+    public String getFilename() {
+        return String.format("%s"+File.separatorChar+"%d"+File.separatorChar+"%d.dat",
+                dateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")),
+                station,
+                dateTime.getHour());
+    }
 }

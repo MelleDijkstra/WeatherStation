@@ -1,8 +1,6 @@
 import models.Measurement;
 import org.jetbrains.annotations.Nullable;
 import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -46,7 +44,7 @@ class Parser {
     }
 
     private static DocumentBuilder getDocBuilder() throws ParserConfigurationException {
-        if(docBuilder == null) {
+        if (docBuilder == null) {
             DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
             docBuilder = docFactory.newDocumentBuilder();
         }
