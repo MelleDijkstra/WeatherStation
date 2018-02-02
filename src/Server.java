@@ -8,16 +8,13 @@ import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Queue;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.*;
 
 public class Server extends Thread {
 
-    private ConcurrentLinkedQueue<String> queue;
+    private LinkedBlockingQueue<String> queue;
 
-    Server(ConcurrentLinkedQueue<String> queue) {
+    Server(LinkedBlockingQueue<String> queue) {
         this.queue = queue;
     }
 
@@ -47,12 +44,12 @@ public class Server extends Thread {
 class SocketThread extends Thread {
 
     private Socket s;
-    private ConcurrentLinkedQueue<String> queue;
+    private LinkedBlockingQueue<String> queue;
     private static int nth = 0;
     // Increase the id with 1 when new Thread is created
     private final int id = ++nth;
 
-    SocketThread(Socket s, ConcurrentLinkedQueue<String> queue) {
+    SocketThread(Socket s, LinkedBlockingQueue<String> queue) {
         this.queue = queue;
         this.s = s;
     }
