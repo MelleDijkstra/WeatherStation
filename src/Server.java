@@ -31,9 +31,9 @@ public class Server extends Thread {
             // That is why we cast the ExecutorService to a ThreadPoolExecutor so we can execute the method getPoolSize()
             ThreadPoolExecutor pool = (ThreadPoolExecutor) executor;
             ServerSocket server = new ServerSocket(7789);
-            System.out.print("Server started...");
 
             while (true) {
+                System.out.println("Listening...");
                 Socket s = server.accept();
                 executor.execute(new SocketThread(s, queue));
                 System.out.println("Number of threads in pool: " + pool.getPoolSize());
