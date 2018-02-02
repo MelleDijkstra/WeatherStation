@@ -8,16 +8,13 @@ import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Queue;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.*;
 
 public class Server extends Thread {
 
-    private ConcurrentLinkedQueue<String> queue;
+    private LinkedBlockingQueue<String> queue;
 
-    Server(ConcurrentLinkedQueue<String> queue) {
+    Server(LinkedBlockingQueue<String> queue) {
         this.queue = queue;
     }
 
@@ -30,8 +27,9 @@ public class Server extends Thread {
             // ExecutorService doesn't have a method to retrieve the number of threads in the Thread Pool
             // That is why we cast the ExecutorService to a ThreadPoolExecutor so we can execute the method getPoolSize()
             ThreadPoolExecutor pool = (ThreadPoolExecutor) executor;
-            ServerSocket server = new ServerSocket(7789);
-            System.out.print("Server started...");
+            int port = 7789;
+            ServerSocket server = new ServerSocket(port);
+            System.out.println("Server starting on port: "+port);
 
             while (true) {
                 Socket s = server.accept();
@@ -47,12 +45,12 @@ public class Server extends Thread {
 class SocketThread extends Thread {
 
     private Socket s;
-    private ConcurrentLinkedQueue<String> queue;
+    private LinkedBlockingQueue<String> queue;
     private static int nth = 0;
     // Increase the id with 1 when new Thread is created
     private final int id = ++nth;
 
-    SocketThread(Socket s, ConcurrentLinkedQueue<String> queue) {
+    SocketThread(Socket s, LinkedBlockingQueue<String> queue) {
         this.queue = queue;
         this.s = s;
     }
@@ -69,10 +67,8 @@ class SocketThread extends Thread {
                     xml.append(line);
                     if (xml.toString().endsWith("</WEATHERDATA>")) {
                         // processing of message is done in same thread, reading will have to wait
-                        queue.offer(xml.toString());
+                        queue.put(xml.toString());
                         xml.setLength(0);
-                        System.out.println("Number of items in queue: " + queue.size());
-                        System.out.println("Finished by thread: " + id);
                     }
                 } else {
                     in.close();
@@ -80,7 +76,7 @@ class SocketThread extends Thread {
                     break;
                 }
             }
-        } catch (IOException e) {
+        } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }
     }
