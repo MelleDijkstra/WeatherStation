@@ -67,7 +67,6 @@ class SocketThread extends Thread {
                     xml.append(line);
                     if (xml.toString().endsWith("</WEATHERDATA>")) {
                         // processing of message is done in same thread, reading will have to wait
-                        System.out.println("Putting data in queue");
                         queue.put(xml.toString());
                         xml.setLength(0);
                     }

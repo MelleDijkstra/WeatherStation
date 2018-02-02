@@ -27,9 +27,7 @@ public class WeatherStation {
         while (true) {
             try {
                 // Constantly check if new XML messages are coming in
-                System.out.println("Polling...");
                 String xml = queue.take();
-                System.out.println("Poll done!");
                 if (xml != null) {
                     // If there is an XML message, parse it. Parser returns Measurement objects from the XML
                     measurementList = Parser.parseFromXML(xml);
