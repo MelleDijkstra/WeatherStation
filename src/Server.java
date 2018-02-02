@@ -27,10 +27,11 @@ public class Server extends Thread {
             // ExecutorService doesn't have a method to retrieve the number of threads in the Thread Pool
             // That is why we cast the ExecutorService to a ThreadPoolExecutor so we can execute the method getPoolSize()
             ThreadPoolExecutor pool = (ThreadPoolExecutor) executor;
-            ServerSocket server = new ServerSocket(7789);
+            int port = 7789;
+            ServerSocket server = new ServerSocket(port);
+            System.out.println("Server starting on port: "+port);
 
             while (true) {
-                System.out.println("Listening...");
                 Socket s = server.accept();
                 executor.execute(new SocketThread(s, queue));
                 System.out.println("Number of threads in pool: " + pool.getPoolSize());
@@ -66,10 +67,9 @@ class SocketThread extends Thread {
                     xml.append(line);
                     if (xml.toString().endsWith("</WEATHERDATA>")) {
                         // processing of message is done in same thread, reading will have to wait
-                        queue.offer(xml.toString());
+                        System.out.println("Putting data in queue");
+                        queue.put(xml.toString());
                         xml.setLength(0);
-                        System.out.println("Number of items in queue: " + queue.size());
-                        System.out.println("Finished by thread: " + id);
                     }
                 } else {
                     in.close();
@@ -77,7 +77,7 @@ class SocketThread extends Thread {
                     break;
                 }
             }
-        } catch (IOException e) {
+        } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }
     }
