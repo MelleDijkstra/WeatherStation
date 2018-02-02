@@ -5,19 +5,16 @@
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.net.*;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.util.Queue;
+import java.util.concurrent.*;
 
 public class Server extends Thread {
 
-    private ConcurrentLinkedQueue<String> queue;
+    private LinkedBlockingQueue<String> queue;
 
-    Server(ConcurrentLinkedQueue<String> queue) {
+    Server(LinkedBlockingQueue<String> queue) {
         this.queue = queue;
     }
 
@@ -30,8 +27,9 @@ public class Server extends Thread {
             // ExecutorService doesn't have a method to retrieve the number of threads in the Thread Pool
             // That is why we cast the ExecutorService to a ThreadPoolExecutor so we can execute the method getPoolSize()
             ThreadPoolExecutor pool = (ThreadPoolExecutor) executor;
-            ServerSocket server = new ServerSocket(3301);
-            System.out.println("Server started...");
+            int port = 7789;
+            ServerSocket server = new ServerSocket(port);
+            System.out.println("Server starting on port: "+port);
 
             while (true) {
                 Socket s = server.accept();
@@ -42,66 +40,14 @@ public class Server extends Thread {
             e.printStackTrace();
         }
     }
-
-    public void startDiscovery() {
-        new AutoDiscovery().start();
-    }
-}
-
-class AutoDiscovery extends Thread {
-
-    private boolean stopDiscovery = false;
-
-    @Override
-    public void run() {
-        try {
-            //Keep a socket open to listen to all the UDP traffic that is destined for this port
-            DatagramSocket udp = new DatagramSocket(8888, InetAddress.getByName("0.0.0.0"));
-            udp.setBroadcast(true);
-
-            while (!stopDiscovery) {
-                //Receive a packet
-                byte[] recvBuf = new byte[1024];
-                DatagramPacket packet = new DatagramPacket(recvBuf, recvBuf.length);
-                System.out.println("Started discovery...");
-                udp.receive(packet);
-
-                //Packet received
-                System.out.println(getClass().getName() + ">>>Discovery packet received from: " + packet.getAddress().getHostAddress());
-                System.out.println(getClass().getName() + ">>>Packet received; data: " + new String(packet.getData()));
-
-                //See if the packet holds the right command (message)
-                String message = new String(packet.getData()).trim();
-                if (message.equals("DISCOVER_WEATHERSTATION_REQUEST")) {
-                    byte[] sendData = "DISCOVER_WEATHERSTATION_RESPONSE".getBytes();
-
-                    //Send a response
-                    DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, packet.getAddress(), packet.getPort());
-                    udp.send(sendPacket);
-
-                    System.out.println(getClass().getName() + ">>>Sent packet to: " + sendPacket.getAddress().getHostAddress());
-                    stopDiscovery = true;
-                }
-            }
-
-            start();
-        } catch (IOException ex) {
-            ex.printStackTrace();
-        }
-    }
-
-    public void stopDiscovery() {
-        stopDiscovery = true;
-    }
-
 }
 
 class SocketThread extends Thread {
 
     private Socket s;
-    private ConcurrentLinkedQueue<String> queue;
+    private LinkedBlockingQueue<String> queue;
 
-    SocketThread(Socket s, ConcurrentLinkedQueue<String> queue) {
+    SocketThread(Socket s, LinkedBlockingQueue<String> queue) {
         this.queue = queue;
         this.s = s;
     }
@@ -117,7 +63,7 @@ class SocketThread extends Thread {
                     xml.append(line);
                     if (xml.toString().endsWith("</WEATHERDATA>")) {
                         // processing of message is done in same thread, reading will have to wait
-                        queue.offer(xml.toString());
+                        queue.put(xml.toString());
                         xml.setLength(0);
                     }
                 } else {
@@ -126,7 +72,7 @@ class SocketThread extends Thread {
                     break;
                 }
             }
-        } catch (IOException e) {
+        } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }
     }
