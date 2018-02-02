@@ -22,14 +22,17 @@ public class WeatherStation {
     public void run() {
         // Start the server
         s.start();
+        // list to store measurements temporarily
+        List<Measurement> measurementList;
         while (true) {
             try {
                 // Constantly check if new XML messages are coming in
                 System.out.println("Polling...");
                 String xml = queue.take();
+                System.out.println("Poll done!");
                 if (xml != null) {
                     // If there is an XML message, parse it. Parser returns Measurement objects from the XML
-                    List<Measurement> measurementList = Parser.parseFromXML(xml);
+                    measurementList = Parser.parseFromXML(xml);
                     if (measurementList != null) {
                         System.out.println("\nTotal: " + measurementList.size() + "\n");
                         for (Measurement measurement : measurementList) {
