@@ -33,10 +33,6 @@ hs_err_pid*
 # User-specific stuff:
 .idea/
 
-# Gradle:
-.idea/**/gradle.xml
-.idea/**/libraries
-
 # CMake
 cmake-build-debug/
 
