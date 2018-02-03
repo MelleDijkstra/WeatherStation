@@ -5,6 +5,9 @@ import org.w3c.dom.Node;
 import protobuf.WeatherstationV1;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -210,10 +213,21 @@ public class Measurement extends BaseModel implements Hydrate {
                 .build();
     }
 
-    public String getFilename() {
-        return String.format("%s"+File.separatorChar+"%d"+File.separatorChar+"%d.dat",
+    public String getFilename(String path) {
+        path = (path.endsWith(File.separator)) ? path : path + File.separatorChar;
+        return String.format(path + "%s" + File.separatorChar + "%d" + File.separatorChar + "%d.dat",
                 dateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")),
                 station,
                 dateTime.getHour());
+    }
+
+    public void saveToFile(String path) throws IOException {
+        File file = new File(getFilename(path));
+        File directory = file.getParentFile();
+        // check if directory exists where we want to store the measurement
+        if (!directory.exists()) {
+            directory.mkdirs();
+        }
+        toProtobuf().writeTo(new FileOutputStream(file));
     }
 }

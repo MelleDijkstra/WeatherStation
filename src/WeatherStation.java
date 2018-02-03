@@ -27,11 +27,22 @@ public class WeatherStation {
      */
     private boolean running = true;
 
-    WeatherStation() {
-        // TODO: setup server and autodiscovery
-        // Making a ThreadSafe Queue
+    /**
+     * The location where to store weather data
+     */
+    private File storageLocation;
+
+    WeatherStation(Properties settings) throws FileNotFoundException {
+        // retrieve port number from settings file
+        int port = Integer.parseInt(settings.getProperty("port"));
+        storageLocation = new File(settings.getProperty("storage_location"));
+        if(!storageLocation.exists() || !storageLocation.isDirectory()) {
+            throw new FileNotFoundException("Given storage location does not exist or is not a directory, path given: "+storageLocation.getAbsolutePath());
+        }
+
+        // A thread safe queue which is shared among multiple threads
         queue = new LinkedBlockingQueue<>();
-        s = new Server(queue);
+        s = new Server(queue, port);
     }
 
     public void run() {
@@ -51,13 +62,11 @@ public class WeatherStation {
                         // TODO: correction
                         // Store measurement
                         for (Measurement m : measurementList) {
-                            File file = new File(m.getFilename());
-                            file.getParentFile().mkdirs();
-                            m.toProtobuf().writeTo(new FileOutputStream(file));
+                            m.saveToFile(storageLocation.getAbsolutePath());
                         }
                     }
                 }
-            } catch (IOException | InterruptedException e) {
+            } catch (InterruptedException | IOException e) {
                 e.printStackTrace();
             }
         }
