@@ -18,6 +18,9 @@ class Parser {
 
     private static DocumentBuilder docBuilder;
 
+    private Parser() {
+    }
+
     @Nullable
     public static List<Measurement> parseFromFile(File file) {
         try {

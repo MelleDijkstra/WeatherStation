@@ -1,10 +1,12 @@
+import models.CorrectionAnalysis;
 import models.Measurement;
-import protobuf.WeatherstationV1;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.List;
-import java.io.*;
-import java.time.LocalDateTime;
-import java.util.*;
+import java.util.Properties;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 /**
@@ -16,6 +18,11 @@ public class WeatherStation {
      * Server object where clients can connect with and send measurement XML information
      */
     private Server s;
+
+    /**
+     * The correction manager
+     */
+    CorrectionAnalysis correction;
 
     /**
      * Thread safe queue shared among client threads
@@ -36,8 +43,8 @@ public class WeatherStation {
         // retrieve port number from settings file
         int port = Integer.parseInt(settings.getProperty("port"));
         storageLocation = new File(settings.getProperty("storage_location"));
-        if(!storageLocation.exists() || !storageLocation.isDirectory()) {
-            throw new FileNotFoundException("Given storage location does not exist or is not a directory, path given: "+storageLocation.getAbsolutePath());
+        if (!storageLocation.exists() || !storageLocation.isDirectory()) {
+            throw new FileNotFoundException("Given storage location does not exist or is not a directory, path given: " + storageLocation.getAbsolutePath());
         }
 
         // A thread safe queue which is shared among multiple threads

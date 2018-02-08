@@ -7,8 +7,10 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.Queue;
-import java.util.concurrent.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
 
 /**
  * WeatherStation Server
@@ -32,8 +34,9 @@ public class Server extends Thread {
 
     /**
      * Server initialization
+     *
      * @param queue Thread safe queue to put socket messages in
-     * @param port The port to listen on
+     * @param port  The port to listen on
      */
     Server(LinkedBlockingQueue<String> queue, int port) {
         this.port = port;
@@ -49,7 +52,7 @@ public class Server extends Thread {
             // That is why we cast the ExecutorService to a ThreadPoolExecutor so we can execute the method getPoolSize()
             ThreadPoolExecutor pool = (ThreadPoolExecutor) executor;
             ServerSocket server = new ServerSocket(port);
-            System.out.println("Server starting on port: "+port);
+            System.out.println("Server starting on port: " + port);
 
             while (serving) {
                 Socket s = server.accept();
@@ -87,7 +90,8 @@ class SocketThread extends Thread {
 
     /**
      * SocketThread initialization
-     * @param s The socket connection with client
+     *
+     * @param s     The socket connection with client
      * @param queue The thread safe queue
      */
     SocketThread(Socket s, LinkedBlockingQueue<String> queue) {
