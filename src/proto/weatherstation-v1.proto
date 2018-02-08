@@ -1,0 +1,34 @@
+syntax = "proto3";
+
+option optimize_for = SPEED;
+
+package protobuf;
+
+message Measurement {
+    // station number
+    int32 station = 1;
+    /**
+     * Timestamp of received measurement
+     * The actual measurement contains a date and time because there will not be
+     * any measurements from before 1970-1-1 we can safely use a timestamp
+     */
+    int32 datetime = 2;
+    float temperature = 3; // -9999.9 - 9999.9 in degrees celcius
+    float dewpoint = 4; // -9999.9 - 9999.9 in degrees celcius
+    float station_air_pressure = 5; // 0.0 - 9999.9 in millibar (at station)
+    float sea_air_pressure = 6; // 0.0 - 9999.9 in millibar (at sea)
+    float visibility = 7; // 0.0 - 999.9 in kilometers
+    float windspeed = 8; // 0.0 - 999.9 in kilometers per hour
+    float precipitation = 9; // 0.00 - 999.99 in centimeters
+    float fallen_snow = 10; // -9999.9 - 9999.99 in centimeters
+    // events of this day - 0 if event didn't happen or 1 if it did
+    bool freeze = 11;
+    bool rain = 12;
+    bool snow = 13;
+    bool hail = 14;
+    bool storm = 15;
+    bool tornado = 16;
+
+    float overcast = 17; // 0.0 - 99.9 as percentage
+    int32 wind_direction = 18; // 0 - 359 in degrees
+}

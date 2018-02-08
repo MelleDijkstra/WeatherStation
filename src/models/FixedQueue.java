@@ -12,7 +12,7 @@ public class FixedQueue<E> extends LinkedList<E> {
 
     @Override
     public boolean add(E e) {
-        if(size() >= maxQueueSize) {
+        if (size() >= maxQueueSize) {
             removeLast();
         }
         return super.add(e);

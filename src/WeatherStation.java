@@ -1,47 +1,88 @@
 import models.CorrectionAnalysis;
 import models.Measurement;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.List;
+import java.util.Properties;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
+/**
+ * The weatherstation
+ */
 public class WeatherStation {
 
+    /**
+     * Server object where clients can connect with and send measurement XML information
+     */
     private Server s;
-    CorrectionAnalysis correction;
-    private ConcurrentLinkedQueue<String> queue;
 
-    WeatherStation() {
-        // TODO: setup server and autodiscovery
-        // Making a ThreadSafe Queue
-        queue = new ConcurrentLinkedQueue<>();
-        correction = new CorrectionAnalysis();
-        s = new Server(queue);
+    /**
+     * The correction manager
+     */
+    CorrectionAnalysis correction;
+
+    /**
+     * Thread safe queue shared among client threads
+     */
+    private LinkedBlockingQueue<String> queue;
+
+    /**
+     * Running flag
+     */
+    private boolean running = true;
+
+    /**
+     * The location where to store weather data
+     */
+    private File storageLocation;
+
+    WeatherStation(Properties settings) throws FileNotFoundException {
+        // retrieve port number from settings file
+        int port = Integer.parseInt(settings.getProperty("port"));
+        storageLocation = new File(settings.getProperty("storage_location"));
+        if (!storageLocation.exists() || !storageLocation.isDirectory()) {
+            throw new FileNotFoundException("Given storage location does not exist or is not a directory, path given: " + storageLocation.getAbsolutePath());
+        }
+
+        // A thread safe queue which is shared among multiple threads
+        queue = new LinkedBlockingQueue<>();
+        s = new Server(queue, port);
     }
 
     public void run() {
         // Start the server
         s.start();
-        while(true) {
-            // Constantly check if new XML messages are coming in
-            String xml = queue.poll();
-            if(xml != null) {
-                // If there is an XML message, parse it. Parser returns Measurement objects from the XML
-                List<Measurement> measurementList = Parser.parseFromXML(xml);
-                if(measurementList != null) {
-                    for (Measurement m : measurementList) {
-                        Measurement correctedMeasurement = correction.correct(m);
+        // list to store measurements temporarily
+        List<Measurement> measurementList;
+        while (running) {
+            try {
+                // Constantly check if new XML messages are coming in
+                String xml = queue.take();
+                if (xml != null) {
+                    // If there is an XML message, parse it. Parser returns Measurement objects from the XML
+                    measurementList = Parser.parseFromXML(xml);
+                    if (measurementList != null) {
+                        // Go through measurement list and check for errors
+                        // TODO: correction
+                        // Store measurement
+                        for (Measurement m : measurementList) {
+                            m.saveToFile(storageLocation.getAbsolutePath());
+                        }
                     }
-                    //correction.storeMeasurements();
                 }
-                //List<Measurement> correctedMeasurements = cm.runCorrections(measurementList);
+            } catch (InterruptedException | IOException e) {
+                e.printStackTrace();
             }
         }
     }
 
-    public void storeMeasurements() {
-        // TODO: store measurements on
-        //measurementHistory.add();
+    /**
+     * Stop the weatherstation
+     */
+    public void stop() {
+        running = false;
     }
-
-    }
-
+}

@@ -2,8 +2,13 @@ package models;
 
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
+import protobuf.WeatherstationV1;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 
@@ -158,7 +163,7 @@ public class Measurement extends BaseModel implements Hydrate {
         StringBuilder sb = new StringBuilder();
         sb.append(String.format("%d %s:\n", station, dateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))));
         for (HashMap.Entry<Fields, Float> entry : fields.entrySet()) {
-            sb.append("\t" + entry.getKey().toString() + " = " + entry.getValue()+"\n");
+            sb.append("\t" + entry.getKey().toString() + " = " + entry.getValue() + "\n");
         }
         return sb.toString();
     }
@@ -179,4 +184,42 @@ public class Measurement extends BaseModel implements Hydrate {
         }
     }
 
+    public WeatherstationV1.Measurement toProtobuf() {
+        return WeatherstationV1.Measurement.newBuilder()
+                .setStation(station)
+                .setDatetime((int) dateTime.atZone(ZoneId.systemDefault()).toEpochSecond())
+                .setDewpoint(fields.get(Fields.DEWP))
+                .setFallenSnow(fields.get(Fields.SNDP))
+                .setOvercast(fields.get(Fields.CLDC))
+                .setPrecipitation(fields.get(Fields.PRCP))
+                .setSeaAirPressure(fields.get(Fields.SLP))
+                .setStationAirPressure(fields.get(Fields.STP))
+                .setTemperature(fields.get(Fields.TEMP))
+                .setVisibility(fields.get(Fields.VISIB))
+                .setFreeze((events & 1) != 0) // check 0th bit
+                .setRain((events & 1 << 1) != 0) // check 1th bit
+                .setSnow((events & 1 << 2) != 0) // check 2th bit
+                .setHail((events & 1 << 3) != 0) // check 3th bit
+                .setStorm((events & 1 << 4) != 0) // check 4th bit
+                .setTornado((events & 1 << 5) != 0) // check 5th bit
+                .build();
+    }
+
+    public String getFilename(String path) {
+        path = (path.endsWith(File.separator)) ? path : path + File.separatorChar;
+        return String.format(path + "%s" + File.separatorChar + "%d" + File.separatorChar + "%d.dat",
+                dateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")),
+                station,
+                dateTime.getHour());
+    }
+
+    public void saveToFile(String path) throws IOException {
+        File file = new File(getFilename(path));
+        File directory = file.getParentFile();
+        // check if directory exists where we want to store the measurement
+        if (!directory.exists()) {
+            directory.mkdirs();
+        }
+        toProtobuf().writeTo(new FileOutputStream(file));
+    }
 }
